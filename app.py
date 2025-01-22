@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Укажи свой API-ключ OpenAI
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "sk-proj-6qlMTXl87ldc_Ac4-f1aAdlPFl3R72HGt8gYsw_UbDU-r2TAZ_ztKTtSOOSBPRp-qQe4Wc8CJpT3BlbkFJzC7JT5hJn5zdb_1Uiokm-TV9Un-xLu2bjQqY63nfZErxQLJ5eYLeq75gNFKlG0UBVv_zqxdKIA7cA"
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 @app.route('/', methods=['POST'])
