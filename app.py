@@ -1,30 +1,34 @@
+import requests
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+# URL для перенаправления запросов (например, сервер Леночки)
+LENOCHKA_API_URL = "https://your-api-url.com/process_request"
+
 @app.route('/', methods=['POST'])
 def webhook():
     try:
-        # Логируем запрос для отладки
+        # Получаем данные от Алисы
         request_data = request.json
         print(f"Получен запрос: {request_data}")
 
-        # Проверяем, что ключи "session" и "request" есть в данных
-        if "session" not in request_data or "request" not in request_data:
-            raise KeyError("Отсутствуют обязательные ключи 'session' или 'request'")
+        # Проверяем структуру запроса
+        if not request_data or "session" not in request_data or "request" not in request_data:
+            return jsonify({"error": "invalid_request", "message": "Missing keys"}), 400
 
-        # Получаем команду пользователя
+        # Извлекаем команду пользователя
         user_command = request_data["request"].get("command", "").lower()
 
-        # Формируем ответ в зависимости от команды
-        if "привет" in user_command:
-            response_text = "Привет! Как я могу помочь?"
-        elif "пока" in user_command:
-            response_text = "До свидания! Хорошего дня!"
-        else:
-            response_text = "Извините, я не понял вашу команду."
+        # Перенаправляем запрос ко мне через API
+        payload = {"command": user_command, "user_id": request_data["session"]["user_id"]}
+        response_from_me = requests.post(LENOCHKA_API_URL, json=payload)
+        response_from_me.raise_for_status()  # Проверяем успешность запроса
 
-        # Ответ для Алисы
+        # Получаем обработанный ответ от API
+        response_text = response_from_me.json().get("response", "Извините, я пока не могу ответить на этот запрос.")
+
+        # Формируем ответ для Алисы
         response = {
             "version": "1.0",
             "session": request_data["session"],
@@ -36,7 +40,7 @@ def webhook():
         return jsonify(response)
 
     except Exception as e:
-        # Обрабатываем ошибку и возвращаем сообщение для отладки
+        # Логируем ошибки
         print(f"Ошибка: {e}")
         return jsonify({"error": "internal_error", "message": str(e)}), 500
 
